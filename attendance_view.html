@@ -756,58 +756,58 @@
         // =================================================================================
         const REPORT_STYLES = `
         .report-body { font-family: 'Malgun Gothic', 'Dotum', sans-serif; color: #333; background: #fff; line-height: 1.2; margin: 0; padding: 0; }
-        
+
         /* [공통] 페이지 내부 여백 */
         .page-inner { width: 100%; height: 100%; padding: 10mm; box-sizing: border-box; position: relative; }
 
         /* [웹 화면용] A4 사이즈 강제 고정 (WYSIWYG) */
-        .web-paper-portrait { 
+        .web-paper-portrait {
             width: 210mm; min-width: 210mm;
             height: 297mm; min-height: 297mm;
-            background: white; 
-            box-shadow: 0 0 15px rgba(0,0,0,0.15); 
-            margin-bottom: 30px; 
+            background: white;
+            box-shadow: 0 0 15px rgba(0,0,0,0.15);
+            margin-bottom: 30px;
         }
-        .web-paper-landscape { 
-            width: 297mm; min-width: 297mm; 
+        .web-paper-landscape {
+            width: 297mm; min-width: 297mm;
             height: 210mm; min-height: 210mm;
-            background: white; 
-            box-shadow: 0 0 15px rgba(0,0,0,0.15); 
-            margin-bottom: 30px; 
+            background: white;
+            box-shadow: 0 0 15px rgba(0,0,0,0.15);
+            margin-bottom: 30px;
         }
 
         /* [PDF 변환용] 세로 페이지 틀 (295mm 안전 여백) */
-        .pdf-page-wrapper { 
-            width: 210mm; height: 295mm; 
-            position: relative; overflow: hidden; background: white; 
+        .pdf-page-wrapper {
+            width: 210mm; height: 295mm;
+            position: relative; overflow: hidden; background: white;
             page-break-after: always; margin: 0; padding: 0;
         }
         .pdf-page-wrapper:last-child { page-break-after: avoid !important; }
 
         /* 내용물 래퍼 */
         .pdf-inner-portrait { width: 100%; height: 100%; padding: 15mm; box-sizing: border-box; }
-        .pdf-rotate-content { 
-            width: 297mm; height: 210mm; 
-            position: absolute; top: 0; left: 210mm; 
-            transform: rotate(90deg); transform-origin: top left; 
+        .pdf-rotate-content {
+            width: 297mm; height: 210mm;
+            position: absolute; top: 0; left: 210mm;
+            transform: rotate(90deg); transform-origin: top left;
             padding: 10mm; box-sizing: border-box;
         }
 
         /* [헤더 & 타이틀] */
         .doc-header { border-bottom: 2px solid #2c3e50; padding-bottom: 5px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-end; }
         .doc-title { font-size: 16px; font-weight: 800; color: #2c3e50; letter-spacing: -0.5px; }
-        
+
         /* [기존 요약 카드 (구버전 호환용)] */
         .summary-header-card { background: linear-gradient(135deg, #2c3e50, #34495e); color: white; border-radius: 8px; padding: 15px; display: flex; justify-content: space-between; margin-bottom: 15px; }
         .sh-item { text-align: center; flex: 1; border-right: 1px solid rgba(255,255,255,0.2); } .sh-item:last-child { border-right: none; }
         .sh-value { font-size: 24px; font-weight: 800; margin-top: 3px; }
-        
+
         /* [테이블] 18명 기준 슬림 스타일 */
         .summary-table { width: 100%; border-collapse: collapse; font-size: 9px; text-align: center; border: 1px solid #aaa; }
         .summary-table th { background-color: #f1f2f6; color: #2d3436; font-weight: 700; padding: 4px 2px; border: 1px solid #aaa; height: 26px; }
         .summary-table td { padding: 2px; border: 1px solid #ccc; color: #2d3436; vertical-align: middle; height: 24px; }
         .summary-table tr:nth-child(even) { background-color: #fcfcfc; }
-        
+
         /* 뱃지 및 유틸 */
         .badge { display: inline-block; padding: 1px 3px; border-radius: 2px; font-size: 8px; font-weight: bold; margin-right: 2px; }
         .badge-reg { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
@@ -816,95 +816,95 @@
         .val-total { font-weight: 900; color: #d35400; background-color: #fff8e1; }
         .val-over { color: #2980b9; font-weight: bold; }
         .val-alert { color: #c0392b; font-weight: bold; }
-        
+
         /* 하단 캡션 */
         .table-caption { margin-top: 5px; font-size: 9px; color: #95a5a6; text-align: right; width: 100%; white-space: nowrap; }
-        
+
         /* 그래프 그리드 (구버전 호환) */
         .summary-grid { display: flex; gap: 15px; } .summary-card { flex: 1; background: #fff; border: 1px solid #ccc; border-radius: 6px; }
         .sc-header { padding: 8px; font-weight: bold; font-size: 13px; border-bottom: 1px solid #eee; }
         .sc-blue .sc-header { background: #f4f8fb; color: #1F4E78; border-left: 4px solid #1F4E78; }
         .sc-orange .sc-header { background: #fbf6f4; color: #e67e22; border-left: 4px solid #e67e22; }
         .sc-body { padding: 10px; } .sc-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12px; color: #555; } .sc-val { font-weight: bold; color: #333; }
-        
+
 
         /* [NEW] 스마트 대시보드 스타일 (A4 핏 최적화 - 초슬림 버전) */
         /* 간격을 12px -> 8px로 축소하여 하단 잘림 방지 */
-        .dash-container { display: flex; flex-direction: column; gap: 8px; height: 100%; } 
-        
+        .dash-container { display: flex; flex-direction: column; gap: 8px; height: 100%; }
+
         /* 상단 KPI 카드 */
         .kpi-row { display: flex; gap: 8px; justify-content: space-between; margin-bottom: 0; } /* 마진 제거 */
         .kpi-card { flex: 1; background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); } /* 패딩 12->10 축소 */
         .kpi-title { font-size: 11px; color: #7f8c8d; font-weight: bold; margin-bottom: 2px; }
         .kpi-value { font-size: 18px; font-weight: 800; color: #2c3e50; } /* 폰트 20->18 축소 */
         .kpi-sub { font-size: 10px; margin-top: 2px; color: #95a5a6; }
-        
+
         /* MoM 배지 */
         .mom-badge { font-size: 9px; padding: 2px 4px; border-radius: 3px; font-weight: bold; }
         .mom-up { background: #ffebee; color: #c62828; } /* 증가 */
         .mom-down { background: #e8f5e9; color: #2e7d32; } /* 감소 */
-        
+
         /* 하단 리스크 관리 섹션 (높이 및 패딩 축소) */
         .risk-row { display: flex; gap: 15px; flex: 0 0 auto; }
         .risk-panel { flex: 1; background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px; display: flex; flex-direction: column; } /* 패딩 12->8 축소 */
         .risk-header { font-size: 12px; font-weight: 800; color: #34495e; border-bottom: 2px solid #34495e; padding-bottom: 4px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
-        
+
         /* 리스트 아이템 (더 슬림하게) */
         .risk-list { display: flex; flex-direction: column; gap: 3px; } /* 리스트 간격 5->3 축소 */
         .risk-item { background: white; border: 1px solid #eee; border-radius: 4px; padding: 3px 6px; display: flex; justify-content: space-between; align-items: center; min-height: 22px; } /* 패딩 대폭 축소 */
         .risk-name { font-weight: bold; font-size: 12px; color: #333; }
         .risk-val { font-size: 12px; font-weight: 800; }
         .risk-tag { font-size: 9px; padding: 1px 4px; border-radius: 3px; color: white; font-weight: bold; }
-        
+
         /* 경고 레벨 */
         .tag-danger { background: #e74c3c; } /* 위험 */
         .tag-warn { background: #f39c12; } /* 주의 */
         .val-danger { color: #e74c3c; }
 
         /* [NEW] 달력(매트릭스) 전용 스타일 - 심볼형 최적화 (높이 확대) */
-    .cal-table { width: 100%; border-collapse: collapse; table-layout: fixed; } 
+    .cal-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
     .cal-table th { border: 1px solid #bbb; background: #f0f0f0; font-size: 9px; height: 26px; padding: 0; overflow: hidden; }
-    
+
     /* [수정] 행 높이 42px로 확대하여 여유 공간 확보 */
-    .cal-table td { 
-        border: 1px solid #ccc; 
-        font-size: 9px; 
-        height: 36px; 
-        padding: 0; 
-        text-align: center; 
-        vertical-align: middle; 
-        overflow: hidden; 
-        white-space: nowrap; 
+    .cal-table td {
+        border: 1px solid #ccc;
+        font-size: 9px;
+        height: 36px;
+        padding: 0;
+        text-align: center;
+        vertical-align: middle;
+        overflow: hidden;
+        white-space: nowrap;
     }
 
     .cal-header-day { font-size: 8px; color: #666; font-weight: normal; display: block; line-height: 1; margin-top: 2px; }
     .cal-header-num { font-size: 11px; font-weight: bold; display: block; line-height: 1; margin-bottom: 2px; }
     .cal-holiday-bg { background-color: #ffebee; }
-    
+
     /* 프로필 원형 아이콘 */
-    .profile-circle { 
-        width: 24px; height: 24px; border-radius: 50%; 
-        display: flex; justify-content: center; align-items: center; 
+    .profile-circle {
+        width: 24px; height: 24px; border-radius: 50%;
+        display: flex; justify-content: center; align-items: center;
         font-size: 11px; font-weight: bold; color: white; margin: 0 auto;
     }
     .pc-reg { background-color: #3498db; }
     .pc-daily { background-color: #e67e22; }
-    
+
     /* [수정] 심볼형 텍스트 스타일 */
     .w-sym-base { color: #333; font-weight: 900; font-size: 11px; } /* 평일 O (진하게) */
     .w-sym-hol { color: #8e44ad; font-weight: 900; font-size: 11px; } /* 휴일 특 (보라색 진하게) */
-    
+
     .w-over { color: #2980b9; font-weight: 800; font-size: 9px; margin-left: 1px; } /* 연장 +N */
     .w-short { color: #c0392b; font-weight: 800; font-size: 9px; margin-left: 1px; } /* 조퇴 -N */
-    
+
     /* 스택 레이아웃 (줄간격 넓힘) */
-    .w-stack { 
-        display: flex; 
-        flex-direction: column; 
-        line-height: 1; 
-        justify-content: center; 
-        align-items: center; 
-        height: 100%; 
+    .w-stack {
+        display: flex;
+        flex-direction: column;
+        line-height: 1;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
     }
     `;
 
@@ -954,12 +954,12 @@
                 html: `
                 <div style="text-align:center; padding-top:60mm;">
                     <img src="맥캘리그라피로고.png" style="height:150px; width:auto; margin-top: 10px;" onerror="this.style.display='none'">
-                    
+
                     <div style="font-size:36px; font-weight:900; margin: 10px 0 10px 0; color:#1F4E78;">월간 근태관리 보고서</div>
                     <div style="font-size:18px; font-weight:bold; color:#555; margin-bottom: 30px;">영농조합법인 한국맥꾸룸</div>
-                    
+
                     <div style="font-size:20px; color:#555; border-bottom:2px solid #1F4E78; display:inline-block; padding-bottom:5px;">${year}년 ${month}월</div>
-                    
+
                     <div style="margin:60mm auto 0; width:80%; display:flex; justify-content:flex-end;">
                         <table style="border-collapse:collapse; text-align:center; width:250px;">
                             <tr>
@@ -1178,15 +1178,15 @@
                     <span class="doc-title">2. 일별 인력 투입 및 연장 현황 (Trend)</span>
                 </div>
                 <div style="margin-bottom:10px; text-align:right; font-size:11px;">
-                    <span style="display:inline-block; width:10px; height:10px; background:#e67e22;"></span> 일용직 
+                    <span style="display:inline-block; width:10px; height:10px; background:#e67e22;"></span> 일용직
                     <span style="display:inline-block; width:10px; height:10px; background:#27ae60; margin-left:10px;"></span> 연차(휴무)
-                    <span style="display:inline-block; width:10px; height:10px; background:#3498db; margin-left:10px;"></span> 정규직(근무) 
-                    
+                    <span style="display:inline-block; width:10px; height:10px; background:#3498db; margin-left:10px;"></span> 정규직(근무)
+
                     <span style="color:#2980b9; font-weight:bold; margin-left:15px;">+0h : 연장</span>
                     <span style="color:#c0392b; font-weight:bold; margin-left:10px;">-0h : 조퇴</span>
                     <span style="color:#27ae60; font-weight:bold; margin-left:10px;">0d : 연차</span>
                 </div>
-                
+
                 <div style="display:flex; align-items:flex-end; height:90mm; border-bottom:1px solid #333; gap:2px; padding-top:20px; margin-bottom:0;">
                     ${trend.map(d => {
                     // [수정] 고정값 4 대신 계산된 barScale 변수 사용
@@ -1336,8 +1336,8 @@
 
             const tableHeadHTML = `
                 <tr style="height:28px; background-color:#ecf0f1;">
-                    <th>No</th> <th>성명 / 구분</th> <th>총 근무일</th> <th>평일 근태</th> <th>연장(H)</th> <th>특근(H)</th> <th>평일조퇴</th> <th>결근</th> 
-                    ${useMeal ? `<th style="background-color:#e8f5e9; color:#2e7d32;">식대/식수</th>` : ''} 
+                    <th>No</th> <th>성명 / 구분</th> <th>총 근무일</th> <th>평일 근태</th> <th>연장(H)</th> <th>특근(H)</th> <th>평일조퇴</th> <th>결근</th>
+                    ${useMeal ? `<th style="background-color:#e8f5e9; color:#2e7d32;">식대/식수</th>` : ''}
                     <th style="background-color:#ffe0b2;">총 공수</th> <th>서명</th>
                 </tr>
             `;
@@ -2037,32 +2037,32 @@
                         <title>${year}년_${month}월_근태관리보고서</title>
                         <style>
                             ${REPORT_STYLES}
-                            
+
                             @media print {
                                 @page { margin: 0; size: A4; }
-                                
-                                body { 
-                                    -webkit-print-color-adjust: exact; 
-                                    margin: 0; 
-                                    padding: 0; 
+
+                                body {
+                                    -webkit-print-color-adjust: exact;
+                                    margin: 0;
+                                    padding: 0;
                                     background: white;
                                     zoom: 1.4; /* 140% 확대 유지 */
                                 }
-                                
+
                                 .pdf-page-wrapper { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
-                                
+
                                 /* [★핵심 수정] 가로 페이지(Landscape) 위치 강제 보정 */
                                 .pdf-rotate-content {
                                     transform-origin: top left;
-                                    
+
                                     /* 1. 위쪽 여백이 너무 많음 -> 마이너스 마진으로 위로 당김 */
-                                    margin-top: 50px !important; 
-                                    
+                                    margin-top: 50px !important;
+
                                     /* 2. 왼쪽 여백이 너무 좁음 -> 왼쪽 마진을 주어 오른쪽으로 밈 */
                                     margin-left: 50px !important;
                                 }
                             }
-                            
+
                             body { background: #f0f0f0; display: flex; justify-content: center; }
                             .report-body { background: white; }
                         </style>
@@ -2262,8 +2262,8 @@
                     }
                     return true;
                 }).map(u => {
-                    let m = { work: 0, over: 0, holiD: 0, holiH: 0, short: 0, absent: 0 };
-                    let y = { work: 0, over: 0, holiD: 0, holiH: 0, short: 0, absent: 0 };
+                    let m = { work: 0, over: 0, holiD: 0, holiH: 0, short: 0, absent: 0, mealDays: 0 };
+                    let y = { work: 0, over: 0, holiD: 0, holiH: 0, short: 0, absent: 0, mealDays: 0 };
 
                     dates.forEach(ds => {
                         // 입/퇴사일 체크
@@ -2285,6 +2285,10 @@
                         // [A] 문서(Doc)가 있는 경우 (우선 처리 - 휴일 반차 버그 해결)
                         if (doc && ['vacation', 'full', 'half', 'am', 'pm'].includes(doc.leaveType)) {
                             d_work = 1;
+                            if (!log || Number(log.is_meal ?? 1) !== 0) {
+                                y.mealDays++;
+                                if (isMonthly) m.mealDays++;
+                            }
 
                             if (isHoliday) {
                                 d_holiD = 1;
@@ -2316,6 +2320,10 @@
                                 isAbsent = true;
                             } else if (log.status !== 'vacation') {
                                 d_work = 1;
+                                if (Number(log.is_meal ?? 1) !== 0) {
+                                    y.mealDays++;
+                                    if (isMonthly) m.mealDays++;
+                                }
                                 const ov = parseFloat(log.overtime) || 0;
                                 const sh = parseFloat(log.short_time) || 0;
                                 const logH = log.status.includes('holiday') || (log.status === 'weekday' && isHoliday);
@@ -2349,7 +2357,7 @@
                     let m_meal = 0;
                     if (useMeal) {
                         const key = `u_${u.id}_${currentMonthPrefix}`;
-                        const count = (mealData && mealData[key] !== undefined) ? mealData[key] : m.work;
+                        const count = (mealData && mealData[key] !== undefined) ? mealData[key] : m.mealDays;
                         m_meal = count * mealPrice;
                     }
                     const leave = typeof getLeaveStats === 'function' ? getLeaveStats(u, docs, year) : { total: 0, used: 0 };
@@ -3071,9 +3079,9 @@
 
                     <style>{`
                         @media print {
-                            @page { 
-                                size: A4 portrait; 
-                                margin: 0; 
+                            @page {
+                                size: A4 portrait;
+                                margin: 0;
                             }
                             html, body {
                                 width: 100%;
@@ -3082,8 +3090,8 @@
                                 padding: 0 !important;
                                 background: white !important;
                             }
-                            body * { 
-                                visibility: hidden; 
+                            body * {
+                                visibility: hidden;
                             }
                             .print-safe-modal {
                                 position: absolute !important;
@@ -3105,26 +3113,26 @@
                                 margin: 0 auto !important;     /* 가로 중앙 정렬 */
                                 left: auto !important;
                                 top: auto !important;
-                                
+
                                 width: 210mm !important;
                                 min-height: 297mm !important;
-                                
+
                                 /* 상단 3cm 여백 유지 */
-                                padding: 30mm 20mm 0 20mm !important; 
-                                
+                                padding: 30mm 20mm 0 20mm !important;
+
                                 border: none !important;
                                 box-shadow: none !important;
                                 overflow: visible !important;
                                 background: white !important;
-                                
+
                                 /* [★핵심 수정] 인쇄 배율 90%로 축소하여 하단 잘림 방지 */
-                                zoom: 0.9 !important; 
+                                zoom: 0.9 !important;
                             }
-                            #doc-viewer-container * { 
-                                visibility: visible !important; 
+                            #doc-viewer-container * {
+                                visibility: visible !important;
                             }
-                            .no-print { 
-                                display: none !important; 
+                            .no-print {
+                                display: none !important;
                             }
                         }
                     `}</style>
@@ -3171,7 +3179,7 @@
 
             // [수정] 당월 근태 통계 (수식 정밀화: 특근 공수 및 조퇴 분리)
             const monthStats = useMemo(() => {
-                let s = { work: 0, over: 0, holiDays: 0, holiHours: 0, short: 0, absent: 0, mealCnt: 0, mealCost: 0 };
+                let s = { work: 0, over: 0, holiDays: 0, holiHours: 0, short: 0, absent: 0, mealCnt: 0, mealCost: 0, mealDays: 0 };
 
                 const daysInMonth = new Date(year, month, 0).getDate();
                 const allDates = Array.from({ length: daysInMonth }, (_, i) => i + 1);
@@ -3193,6 +3201,9 @@
                     // A. 문서가 있는 경우 (우선 처리)
                     if (doc && ['vacation', 'full', 'half', 'am', 'pm'].includes(doc.leaveType)) {
                         s.work++;
+                        if (!log || Number(log.is_meal ?? 1) !== 0) {
+                            s.mealDays++;
+                        }
 
                         if (isWeekend) { // 주말/휴일인 경우
                             s.holiDays++;
@@ -3231,6 +3242,9 @@
                             s.absent++;
                         } else if (log.status !== 'vacation') {
                             s.work++;
+                            if (Number(log.is_meal ?? 1) !== 0) {
+                                s.mealDays++;
+                            }
                             const ov = parseFloat(log.overtime) || 0;
                             const sh = parseFloat(log.short_time) || 0;
                             const isH = (log.status.includes('holiday') || (log.status === 'weekday' && isWeekend));
@@ -3250,7 +3264,7 @@
 
                 if (useMeal && mealData) {
                     const key = `${currentMonthKey}_u_${user.id}`;
-                    const val = mealData[key] !== undefined ? mealData[key] : (mealData[`u_${user.id}_${currentMonthKey}`] !== undefined ? mealData[`u_${user.id}_${currentMonthKey}`] : s.work);
+                    const val = mealData[key] !== undefined ? mealData[key] : (mealData[`u_${user.id}_${currentMonthKey}`] !== undefined ? mealData[`u_${user.id}_${currentMonthKey}`] : s.mealDays);
                     s.mealCnt = val;
                     s.mealCost = s.mealCnt * mealPrice;
                 }
@@ -3911,7 +3925,7 @@
 
             // [수정] 통계 집계 (특근 공수 계산 정밀화: (연장-조퇴) 반영)
             const getSummary = (id, type = 'user') => {
-                let s = { work: 0, holiD: 0, holiOver: 0, holiShort: 0, over: 0, short: 0, absent: 0 };
+                let s = { work: 0, holiD: 0, holiOver: 0, holiShort: 0, over: 0, short: 0, absent: 0, mealDays: 0 };
 
                 dates.forEach(d => {
                     const ds = `${currentMonthKey}-${String(d).padStart(2, '0')}`;
@@ -3923,6 +3937,9 @@
                     // 1. 연차/반차 문서가 있는 경우
                     if (doc && ['vacation', 'full', 'half', 'am', 'pm'].includes(doc.leaveType)) {
                         s.work++; // 근무일수 인정
+                        if (!log || Number(log.is_meal ?? 1) !== 0) {
+                            s.mealDays++;
+                        }
 
                         if (isRed) {
                             s.holiD++; // 특근 일수 +1
@@ -3973,6 +3990,9 @@
                     } else if (log.status !== 'vacation' && log.status !== 'half') {
                         const isH = (log.status.includes('holiday') || (log.status === 'weekday' && isRed));
                         s.work++;
+                        if (Number(log.is_meal ?? 1) !== 0) {
+                            s.mealDays++;
+                        }
 
                         if (isH) {
                             s.holiD++;
@@ -4054,14 +4074,14 @@
                     if (over > 0) sub += `+${over}`;
                     if (short > 0) sub += `-${short}`;
 
-                    return (isHoliday ? '특' : 'O') + sub;
+                    return (isHoliday ? '특' : 'O') + sub + (Number(log.is_meal ?? 1) === 0 ? '(X식)' : '');
                 };
 
                 // 2. 식대 계산
                 const getMealCountSafe = (s, target, type) => {
                     let key = (type === 'user') ? `${currentMonthKey}_u_${target.id}` : `${currentMonthKey}_d_${target}`;
                     if (mealData && mealData[key] !== undefined) return mealData[key];
-                    return s ? s.work : 0;
+                    return s ? s.mealDays : 0;
                 };
 
                 // 3. 휴일 조퇴 계산 (특근 조퇴용)
@@ -5077,7 +5097,7 @@
                                                         {transposedColumns.map((col, i) => {
                                                             const s = getSummary(col.id, col.type);
                                                             const key = col.type === 'daily' ? `${currentMonthKey}_d_${col.name}` : `${currentMonthKey}_u_${col.id}`;
-                                                            const count = mealData && mealData[key] !== undefined ? mealData[key] : s.work;
+                                                            const count = mealData && mealData[key] !== undefined ? mealData[key] : s.mealDays;
                                                             return <td key={i} className="border-r text-green-700 font-bold">{(count * mealPrice / 10000).toFixed(1)}만</td>;
                                                         })}
                                                     </tr>
@@ -5086,7 +5106,7 @@
                                                         {transposedColumns.map((col, i) => {
                                                             const s = getSummary(col.id, col.type);
                                                             const key = col.type === 'daily' ? `${currentMonthKey}_d_${col.name}` : `${currentMonthKey}_u_${col.id}`;
-                                                            const count = mealData && mealData[key] !== undefined ? mealData[key] : s.work;
+                                                            const count = mealData && mealData[key] !== undefined ? mealData[key] : s.mealDays;
                                                             return <td key={i} className="border-r text-green-600">{count}</td>;
                                                         })}
                                                     </tr>
@@ -5166,7 +5186,7 @@
                                                         <td className="bg-red-50/30 font-bold text-red-600 text-xs">{s.absent}</td>
                                                         {useMeal && (() => {
                                                             const key = `u_${u.id}_${currentMonthKey}`;
-                                                            const count = mealData && mealData[key] !== undefined ? mealData[key] : s.work;
+                                                            const count = mealData && mealData[key] !== undefined ? mealData[key] : s.mealDays;
                                                             return (
                                                                 <>
                                                                     <td className="bg-green-50/30 border-l border-green-100 text-green-700 text-[10px] font-bold">{((count * mealPrice) / 10000).toFixed(1)}만</td>
@@ -5209,7 +5229,7 @@
                                                         <td className="bg-red-50/30 font-bold text-red-600 text-xs">{s.absent}</td>
                                                         {useMeal && (() => {
                                                             const key = `d_${name}_${currentMonthKey}`;
-                                                            const count = mealData && mealData[key] !== undefined ? mealData[key] : s.work;
+                                                            const count = mealData && mealData[key] !== undefined ? mealData[key] : s.mealDays;
                                                             return (
                                                                 <>
                                                                     <td className="bg-green-50/30 border-l border-green-100 text-green-700 text-[10px] font-bold">{((count * mealPrice) / 10000).toFixed(1)}만</td>
