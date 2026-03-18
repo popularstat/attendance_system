@@ -2198,9 +2198,12 @@
 
             // 1. 식대 통계
             const mealStats = useMemo(() => {
-                if (!useMeal) return { monthTotal: 0, yearTotal: 0 };
                 let mTotal = 0;
                 let yTotal = 0;
+
+                const getMealSetting = (ym) => {
+                    return mealConfigMap && mealConfigMap[`cfg_${ym}`] ? mealConfigMap[`cfg_${ym}`] : { use: false, price: 5000 };
+                };
 
                 // 1. users meal data from logs / mealData
                 users.forEach(u => {
@@ -2208,12 +2211,14 @@
                         const ym = `${year}-${String(i).padStart(2, '0')}`;
                         const key = `u_${u.id}_${ym}`;
                         let count = 0;
+                        const setting = getMealSetting(ym);
+                        if (!setting.use) continue;
+
                         if (mealData && mealData[key] !== undefined) {
                             count = mealData[key];
                         } else {
                             // sum log.is_meal for this month manually to avoid circular dependencies
                             let mSum = 0;
-                            const start = new Date(year, i - 1, 1);
                             const end = new Date(year, i, 0);
                             for (let d = 1; d <= end.getDate(); d++) {
                                 const ds = `${ym}-${String(d).padStart(2, '0')}`;
@@ -2230,7 +2235,7 @@
                             }
                             count = mSum;
                         }
-                        const cost = count * mealPrice;
+                        const cost = count * Number(setting.price);
                         yTotal += cost;
                         if (i === month) mTotal += cost;
                     }
@@ -2244,6 +2249,9 @@
                         const ym = `${year}-${String(i).padStart(2, '0')}`;
                         const key = `${ym}_d_${name}`;
                         let count = 0;
+                        const setting = getMealSetting(ym);
+                        if (!setting.use) continue;
+
                         if (mealData && mealData[key] !== undefined) {
                             count = mealData[key];
                         } else {
@@ -2264,14 +2272,14 @@
                             });
                             count = mSum;
                         }
-                        const cost = count * mealPrice;
+                        const cost = count * Number(setting.price);
                         yTotal += cost;
                         if (i === month) mTotal += cost;
                     }
                 });
 
                 return { monthTotal: mTotal, yearTotal: yTotal };
-            }, [users, dailyLogs, attendanceLogs, docs, mealData, year, month, useMeal, mealPrice]);
+            }, [users, dailyLogs, attendanceLogs, docs, mealData, mealConfigMap, year, month]);
 
 
             // 2. 정규직 근태 통계 (핵심 로직 수정됨)
@@ -2677,7 +2685,7 @@
         }
 
         // [신규 컴포넌트] 구간 비교 분석 시스템 (Seasonal Insight) - [최종] 상세 테이블 분석 모드
-        function SeasonalAnalysis({ users, attendanceLogs, dailyLogs, mealPrice, useMeal, mealData }) {
+        function SeasonalAnalysis({ users, attendanceLogs, dailyLogs, mealData, mealConfigMap }) {
             const today = new Date();
             const thisYear = today.getFullYear();
             const lastYear = thisYear - 1;
@@ -2751,23 +2759,37 @@
                 });
 
                 // 3. 식대 집계
-                if (useMeal) {
-                    let totalMealDays = 0;
+                let totalCost = 0;
 
-                    // 정직원 식수 계산
-                    attendanceLogs.forEach(log => {
-                        const ym = log.date.substring(0, 7);
-                        if (ym >= startStr && ym <= endStr) {
+                // Helper to get meal setting for a month
+                const getMealSetting = (ym) => {
+                    return mealConfigMap && mealConfigMap[`cfg_${ym}`] ? mealConfigMap[`cfg_${ym}`] : { use: false, price: 5000 };
+                };
+
+                // Group meal days by month to apply correct price and 'use' setting
+                const mealDaysByMonth = {};
+
+                // 정직원 식수 계산
+                attendanceLogs.forEach(log => {
+                    const ym = log.date.substring(0, 7);
+                    if (ym >= startStr && ym <= endStr) {
+                        const setting = getMealSetting(ym);
+                        if (setting.use) {
                             if (log.status !== 'absent' && log.status !== 'vacation' && log.status !== 'half') {
-                                if (Number(log.is_meal ?? 1) !== 0) totalMealDays++;
+                                if (Number(log.is_meal ?? 1) !== 0) {
+                                    mealDaysByMonth[ym] = (mealDaysByMonth[ym] || 0) + 1;
+                                }
                             }
                         }
-                    });
+                    }
+                });
 
-                    // 일용직 식수 계산
-                    dailyLogs.forEach(log => {
-                        const ym = log.date.substring(0, 7);
-                        if (ym >= startStr && ym <= endStr) {
+                // 일용직 식수 계산
+                dailyLogs.forEach(log => {
+                    const ym = log.date.substring(0, 7);
+                    if (ym >= startStr && ym <= endStr) {
+                        const setting = getMealSetting(ym);
+                        if (setting.use) {
                             if (log.status !== 'absent') {
                                 let h = log.hours ? parseFloat(log.hours) : 0;
                                 if (!h) {
@@ -2777,22 +2799,26 @@
                                 let days = parseFloat(log.workDays) || 0;
                                 if (days === 0 && h > 0) days = h / 8;
                                 if (!isNaN(h) && (h > 0 || days > 0)) {
-                                    if (Number(log.is_meal ?? 1) !== 0) totalMealDays += days;
+                                    if (Number(log.is_meal ?? 1) !== 0) {
+                                        mealDaysByMonth[ym] = (mealDaysByMonth[ym] || 0) + days;
+                                    }
                                 }
                             }
                         }
-                    });
+                    }
+                });
 
-                    // mealData 오버라이드
-                    if (mealData) {
-                        Object.entries(mealData).forEach(([key, count]) => {
-                            const parts = key.split('_');
-                            if (parts.length >= 3) {
-                                const type = parts[0];
-                                const id = parts[1];
-                                const ym = parts[2];
-                                if (ym >= startStr && ym <= endStr) {
-                                    // mealData에 명시된 값이 있으면, 원래 계산된 값을 빼고 이 값을 더함
+                // mealData 오버라이드
+                if (mealData) {
+                    Object.entries(mealData).forEach(([key, count]) => {
+                        const parts = key.split('_');
+                        if (parts.length >= 3) {
+                            const type = parts[0];
+                            const id = parts[1];
+                            const ym = parts[2];
+                            if (ym >= startStr && ym <= endStr) {
+                                const setting = getMealSetting(ym);
+                                if (setting.use) {
                                     let defaultCount = 0;
                                     if (type === 'u') {
                                         attendanceLogs.forEach(log => {
@@ -2820,14 +2846,19 @@
                                             }
                                         });
                                     }
-                                    totalMealDays = totalMealDays - defaultCount + count;
+                                    mealDaysByMonth[ym] = (mealDaysByMonth[ym] || 0) - defaultCount + count;
                                 }
                             }
-                        });
-                    }
-
-                    agg.totalMeal = totalMealDays * mealPrice;
+                        }
+                    });
                 }
+
+                Object.entries(mealDaysByMonth).forEach(([ym, count]) => {
+                    const setting = getMealSetting(ym);
+                    totalCost += count * Number(setting.price);
+                });
+
+                agg.totalMeal = totalCost;
 
                 // [최종 계산]
                 agg.totalGongsu = agg.regGongsu + agg.dailyGongsu;
@@ -5111,8 +5142,7 @@
                                         attendanceLogs={attendanceLogs}
                                         dailyLogs={dailyLogs}
                                         mealData={mealData}
-                                        mealPrice={mealPrice}
-                                        useMeal={useMeal}
+                                        mealConfigMap={mealConfigMap}
                                     />
                                 )}
                             </div>
