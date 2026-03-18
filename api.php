@@ -82,6 +82,7 @@ if ($method === 'GET') {
     foreach ($logs as &$log) {
         $log['overtime'] = floatval($log['overtime']);
         $log['short_time'] = floatval($log['short_time']);
+        $log['is_meal'] = isset($log['is_meal']) ? intval($log['is_meal']) : 1;
     }
     $data['attendance_logs'] = $logs;
 
