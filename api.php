@@ -420,7 +420,7 @@ if ($method === 'POST') {
             // 2. 데이터가 1개 이상일 때만 INSERT 실행
             // [수정 2] INSERT 로직을 감싸는 if문을 내부에 새로 추가했습니다.
             if (count($input['attendance_logs']) > 0) {
-                $stmt = $conn->prepare("INSERT INTO attendance_logs (user_id, date, status, overtime, short_time, note) VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt = $conn->prepare("INSERT INTO attendance_logs (user_id, date, status, overtime, short_time, note, is_meal) VALUES (?, ?, ?, ?, ?, ?, ?)");
 
                 foreach ($input['attendance_logs'] as $log) {
                     $uid = $log['user_id'] ?? null;
@@ -431,8 +431,9 @@ if ($method === 'POST') {
                     $over = floatval($log['overtime'] ?? 0);
                     $short = floatval($log['short_time'] ?? 0);
                     $note = $log['note'] ?? '';
+                    $is_meal = isset($log['is_meal']) ? intval($log['is_meal']) : 1;
 
-                    $stmt->bind_param("sssdss", $uid, $date, $status, $over, $short, $note);
+                    $stmt->bind_param("sssdssi", $uid, $date, $status, $over, $short, $note, $is_meal);
                     $stmt->execute();
                 }
             }
