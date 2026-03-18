@@ -184,6 +184,21 @@ if ($method === 'POST' && $action == 'save_meal_count') {
     exit;
 }
 
+// [신규] 식대 상태 단독 토글 API
+if ($method === 'POST' && $action === 'toggle_meal_status') {
+    $input = json_decode(file_get_contents('php://input'), true);
+    if (isset($input['user_id']) && isset($input['date']) && isset($input['is_meal'])) {
+        $stmt = $conn->prepare("UPDATE attendance_logs SET is_meal = ? WHERE user_id = ? AND date = ?");
+        $is_meal_val = intval($input['is_meal']);
+        $stmt->bind_param("iss", $is_meal_val, $input['user_id'], $input['date']);
+        $stmt->execute();
+        echo json_encode(['success' => true]);
+    } else {
+        echo json_encode(['success' => false, 'message' => '파라미터 누락']);
+    }
+    exit; // 하단 로직 차단
+}
+
 // ------------------------------------------------------------------
 // [신규] 증명서 발급 추가 API (attendance_view.html용 - 개별 저장)
 // ------------------------------------------------------------------
@@ -395,7 +410,7 @@ if ($method === 'POST') {
         // ------------------------------------------------------------------
         // 3. [출근부 기록 저장] (수정됨)
         // ------------------------------------------------------------------
-        // [수정 1] count(...) > 0 조건을 제거했습니다. 
+        // [수정 1] count(...) > 0 조건을 제거했습니다.
         // 빈 배열([])이 들어왔을 때도 이 안으로 들어와서 DELETE를 실행해야 하기 때문입니다.
         if (isset($input['attendance_logs']) && is_array($input['attendance_logs'])) {
 
