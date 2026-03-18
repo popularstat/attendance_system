@@ -5340,9 +5340,10 @@
             const [overtime, setOvertime] = useState(log?.overtime || 0);
             const [shortTime, setShortTime] = useState(log?.short_time || 0);
             const [note, setNote] = useState(log?.note || '');
+            const [isMeal, setIsMeal] = useState(log?.is_meal !== undefined ? log.is_meal : 1);
 
             const handleSave = async () => {
-                onSave({ overtime: Number(overtime), short_time: Number(shortTime), note });
+                onSave({ overtime: Number(overtime), short_time: Number(shortTime), note, is_meal: Number(isMeal) });
                 onClose();
             };
 
@@ -5373,6 +5374,13 @@
                             <div>
                                 <label className="block text-sm font-bold text-gray-600 dark:text-gray-300 mb-1">비고</label>
                                 <input type="text" value={note} onChange={e => setNote(e.target.value)} className="w-full border p-2 rounded dark:bg-gray-700 dark:text-white" placeholder="사유 입력" />
+                            </div>
+
+                            <div>
+                                <label className="flex items-center gap-2 text-sm font-bold text-gray-600 dark:text-gray-300 mt-2 cursor-pointer">
+                                    <input type="checkbox" checked={isMeal === 1} onChange={e => setIsMeal(e.target.checked ? 1 : 0)} className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                                    식대 포함
+                                </label>
                             </div>
 
                             <div className="pt-2 flex justify-end gap-2">
@@ -5509,12 +5517,52 @@
 
             const renderCellContent = (log) => {
                 if (!log) return '';
-                if (log.status === 'absent') return <span className="text-red-500 font-black">결근</span>;
+
+                // 식대 제외 마커
+                const noMealIcon = (log.is_meal === 0) ? (
+                    <span className="absolute bottom-0 right-0 text-[9px] font-black text-red-500 leading-none" title="식대 제외">X식</span>
+                ) : null;
+
+                if (log.status === 'absent') {
+                    return (
+                        <div className="relative w-full h-full flex items-center justify-center">
+                            <span className="text-red-500 font-black">결근</span>
+                            {noMealIcon}
+                        </div>
+                    );
+                }
+
                 const base = (log.status === 'holiday' || log.status === 'holiday_work') ? '특' : 'O';
                 let sub = '';
                 if (log.overtime > 0) sub += `+${log.overtime}`;
                 if (log.short_time > 0) sub += `-${log.short_time}`;
-                return <span className={(log.status === 'holiday' || log.status === 'holiday_work') ? 'text-blue-600 font-black' : 'text-gray-700 dark:text-gray-300 font-bold'}>{base}<span className="text-[10px] align-top ml-0.5">{sub}</span></span>;
+
+                return (
+                    <div className="relative w-full h-full flex items-center justify-center">
+                        <span className={(log.status === 'holiday' || log.status === 'holiday_work') ? 'text-blue-600 font-black' : 'text-gray-700 dark:text-gray-300 font-bold'}>
+                            {base}
+                            <span className="text-[10px] align-top ml-0.5">{sub}</span>
+                        </span>
+                        {noMealIcon}
+                    </div>
+                );
+            };
+
+            // 식대 상태 단독 토글 API 연동
+            const handleToggleMeal = async (userId, dateStr, isMealVal) => {
+                try {
+                    const res = await fetch('api.php?action=toggle_meal_status', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_id: userId, date: dateStr, is_meal: isMealVal })
+                    });
+                    const data = await res.json();
+                    if (!data.success) {
+                        console.error('식대 업데이트 실패:', data.message);
+                    }
+                } catch (e) {
+                    console.error('식대 업데이트 통신 오류:', e);
+                }
             };
 
             const updateLog = (id, type, dateStr, status, details = {}) => {
@@ -5533,8 +5581,16 @@
                         status: status,
                         overtime: details.overtime || 0,
                         short_time: details.short_time || 0,
-                        note: details.note || ''
+                        note: details.note || '',
+                        is_meal: details.is_meal !== undefined ? details.is_meal : (existIdx > -1 && newLogs[existIdx].is_meal !== undefined ? newLogs[existIdx].is_meal : 1)
                     };
+
+                    // [식대] 변경사항이 있고 user인 경우 API 단독 호출 (일용직은 제외하거나 나중에 대응)
+                    if (type === 'user' && details.is_meal !== undefined) {
+                        if (existIdx === -1 || newLogs[existIdx].is_meal !== details.is_meal) {
+                            handleToggleMeal(id, dateStr, details.is_meal);
+                        }
+                    }
                     if (existIdx > -1) newLogs[existIdx] = { ...newLogs[existIdx], ...newLog };
                     else newLogs.push(newLog);
                 }
@@ -5622,7 +5678,7 @@
                         newShort = 0; // 0시간 조퇴 설정 (4시간 정상 근무 -> O)
                     }
 
-                    updateLog(id, type, dayInfo.dateStr, 'weekday', { short_time: newShort, overtime: 0 });
+                    updateLog(id, type, dayInfo.dateStr, 'weekday', { short_time: newShort, overtime: 0, is_meal: 1 });
                     return;
                 }
 
@@ -5632,7 +5688,13 @@
                 else if (currentLog.status !== 'absent') newStatus = 'absent';
                 else newStatus = null;
 
-                updateLog(id, type, dayInfo.dateStr, newStatus);
+                // [식대] 상태에 따라 기본 식대 포함 여부 변경
+                let newIsMeal = 1;
+                if (newStatus === 'absent' || newStatus === null) {
+                    newIsMeal = 0;
+                }
+
+                updateLog(id, type, dayInfo.dateStr, newStatus, { is_meal: newIsMeal });
             };
 
             const handleAddWorker = async () => {
@@ -5666,7 +5728,7 @@
 
             // [수정] 통계 집계 (반차 계산식 개선: 4시간 기준 조퇴 적용)
             const calculateStats = (id, type) => {
-                let workDays = 0, holidayCnt = 0, holidayOver = 0, holidayShort = 0, overtime = 0, shortTime = 0, absent = 0;
+                let workDays = 0, holidayCnt = 0, holidayOver = 0, holidayShort = 0, overtime = 0, shortTime = 0, absent = 0, mealDays = 0;
 
                 dates.forEach(d => {
                     const info = getDayInfo(d);
@@ -5676,6 +5738,10 @@
                     // 1. [연차/반차] 문서가 있으면 출근으로 인정
                     if (doc && ['vacation', 'full', 'half', 'am', 'pm'].includes(doc.leaveType)) {
                         workDays++;
+                        // [식대] 연차/반차일 경우에도 is_meal 체크 (log가 없으면 기본 1)
+                        if (!log || log.is_meal !== 0) {
+                            mealDays++;
+                        }
 
                         // [★추가됨] 주말/공휴일에 연차 사용 시 -> 특근(D) 및 특근시간(공수) 합산
                         // 토요일(6), 일요일(0), 또는 공휴일이면 특근으로 처리
@@ -5731,6 +5797,10 @@
                         if (log.status === 'absent') absent++;
                         else {
                             workDays++;
+                            // [식대] 출근 로그이면서 is_meal !== 0인 경우
+                            if (log.is_meal !== 0) {
+                                mealDays++;
+                            }
                             const over = Number(log.overtime) || 0;
                             // [수정] 조퇴는 평일(주말X, 공휴일X)인 경우에만 합산
                             if (!info.isWeekend && !info.isHoliday) {
@@ -5751,7 +5821,7 @@
                 });
 
                 const holidayVal = holidayCnt + (holidayOver > 0 ? (holidayOver / 8) : 0);
-                return { workDays, holidayCnt, holidayOver, holidayShort, holidayVal, overtime, shortTime, absent };
+                return { workDays, holidayCnt, holidayOver, holidayShort, holidayVal, overtime, shortTime, absent, mealDays };
             };
 
             const handleBatchCheck = async (day) => {
@@ -5879,7 +5949,7 @@
                         content = (
                             <div className="relative w-full h-full flex items-center justify-center pt-1">
                                 {extraMark}
-                                {renderCellContent(log)}
+                                {renderCellContent(log) || (log?.is_meal === 0 ? <span className="absolute bottom-0 right-0 text-[9px] font-black text-red-500 leading-none">X식</span> : null)}
                             </div>
                         );
                         cellClass += 'cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-900/40';
@@ -5929,7 +5999,7 @@
 
                         {useMeal && (() => {
                             const key = type === 'daily' ? `${currentMonthKey}_d_${name}` : `${currentMonthKey}_u_${id}`;
-                            const count = mealData && mealData[key] !== undefined ? mealData[key] : stats.workDays;
+                            const count = mealData && mealData[key] !== undefined ? mealData[key] : stats.mealDays;
                             const cost = count * mealPrice;
                             return (
                                 <td className="border-l border-gray-200 dark:border-gray-700 bg-green-50/30 dark:bg-green-900/10 cursor-pointer hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
