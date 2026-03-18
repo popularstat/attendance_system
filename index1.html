@@ -5340,8 +5340,8 @@
             const [overtime, setOvertime] = useState(log?.overtime || 0);
             const [shortTime, setShortTime] = useState(log?.short_time || 0);
             const [note, setNote] = useState(log?.note || '');
-            // [수정] log.is_meal이 null이거나 undefined일 때 기본값 1 적용
-            const [isMeal, setIsMeal] = useState(log?.is_meal ?? 1);
+            // [수정] log.is_meal이 null이거나 undefined일 때 기본값 1 적용. 문자열 "1" 방어
+            const [isMeal, setIsMeal] = useState(Number(log?.is_meal ?? 1));
 
             const handleSave = async () => {
                 onSave({ overtime: Number(overtime), short_time: Number(shortTime), note, is_meal: Number(isMeal) });
@@ -5522,7 +5522,7 @@
                 if (!log) return '';
 
                 // 식대 제외 마커
-                const noMealIcon = (useMeal && log.is_meal === 0) ? (
+                const noMealIcon = (useMeal && Number(log.is_meal ?? 1) === 0) ? (
                     <span className="absolute bottom-0 right-0 text-[9px] font-black text-red-500 leading-none" title="식대 제외">X식</span>
                 ) : null;
 
@@ -5742,7 +5742,7 @@
                     if (doc && ['vacation', 'full', 'half', 'am', 'pm'].includes(doc.leaveType)) {
                         workDays++;
                         // [식대] 연차/반차일 경우에도 is_meal 체크 (log가 없으면 기본 1)
-                        if (!log || (log.is_meal ?? 1) !== 0) {
+                        if (!log || Number(log.is_meal ?? 1) !== 0) {
                             mealDays++;
                         }
 
@@ -5801,7 +5801,7 @@
                         else {
                             workDays++;
                             // [식대] 출근 로그이면서 is_meal !== 0인 경우
-                            if ((log.is_meal ?? 1) !== 0) {
+                            if (Number(log.is_meal ?? 1) !== 0) {
                                 mealDays++;
                             }
                             const over = Number(log.overtime) || 0;
@@ -5952,7 +5952,7 @@
                         content = (
                             <div className="relative w-full h-full flex items-center justify-center pt-1">
                                 {extraMark}
-                                {renderCellContent(log) || (useMeal && log?.is_meal === 0 ? <span className="absolute bottom-0 right-0 text-[9px] font-black text-red-500 leading-none">X식</span> : null)}
+                                {renderCellContent(log) || (useMeal && Number(log?.is_meal ?? 1) === 0 ? <span className="absolute bottom-0 right-0 text-[9px] font-black text-red-500 leading-none">X식</span> : null)}
                             </div>
                         );
                         cellClass += 'cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-900/40';
