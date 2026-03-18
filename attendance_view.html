@@ -2186,7 +2186,7 @@
             users, attendanceLogs, year, month, holidays, customHolidays,
             dailyLogs, dailyWorkerNames, docs,
             /* 식대 변수 받기 */
-            useMeal, mealPrice, mealData,
+            useMeal, mealPrice, mealData, mealConfigMap,
             minuteMap, onMinuteClick
         }) {
             const fmt = (n) => Number(n).toFixed(1).replace(/\.0$/, '');
@@ -5133,7 +5133,7 @@
                                         users={users} attendanceLogs={attendanceLogs} year={year} month={month}
                                         holidays={holidays} customHolidays={customHolidays} dailyLogs={dailyLogs}
                                         dailyWorkerNames={dailyWorkerNames} docs={docs}
-                                        useMeal={useMeal} mealPrice={mealPrice} mealData={mealData}
+                                        useMeal={useMeal} mealPrice={mealPrice} mealData={mealData} mealConfigMap={mealConfigMap}
                                         minuteMap={minuteMap} onMinuteClick={(date) => setSelectedDateMinute(date)}
                                     />
                                 ) : (
