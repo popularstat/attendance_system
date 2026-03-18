@@ -1779,7 +1779,7 @@
                 const processMonthly = (target, type) => {
                     let name = (type === 'user') ? target.name : target;
                     let id = (type === 'user') ? String(target.id) : target.trim();
-                    let d = 0, h = 0, g = 0, wd = 0, wo = 0, ws = 0, hd = 0, ho = 0, hs = 0, ab = 0;
+                    let d = 0, h = 0, g = 0, wd = 0, wo = 0, ws = 0, hd = 0, ho = 0, hs = 0, ab = 0, md = 0;
 
                     // 공수 상세 (평일/특근) 추가
                     let wg = 0, hg = 0;
@@ -1822,6 +1822,11 @@
 
                         if (isWork) {
                             d++; h += dayTime; g += (dayTime / 8);
+                            if (doc && ['vacation', 'full', 'half', 'am', 'pm'].includes(doc.leaveType)) {
+                                if (!log || Number(log.is_meal ?? 1) !== 0) md++;
+                            } else if (log && Number(log.is_meal ?? 1) !== 0) {
+                                md++;
+                            }
                             const dow = new Date(year, month - 1, dateNum).getDay();
                             const isRed = checkIsHoliday(ds) || dow === 0;
                             const isSat = dow === 6;
@@ -1840,10 +1845,10 @@
 
                     let mealCount = 0;
                     const currentMonthKey = `${year}-${String(month).padStart(2, '0')}`;
-                    if (useMeal && mealData) {
+                    if (useMeal) {
                         const mKey = (type === 'user') ? `u_${id}_${currentMonthKey}` : `d_${id}_${currentMonthKey}`;
-                        if (mealData[mKey] !== undefined) mealCount = mealData[mKey];
-                        else mealCount = d;
+                        if (mealData && mealData[mKey] !== undefined) mealCount = mealData[mKey];
+                        else mealCount = md;
                     }
                     const mealCost = mealCount * mealPrice;
 
@@ -2196,22 +2201,77 @@
                 if (!useMeal) return { monthTotal: 0, yearTotal: 0 };
                 let mTotal = 0;
                 let yTotal = 0;
-                if (mealData) {
-                    Object.entries(mealData).forEach(([key, count]) => {
-                        const parts = key.split('_');
-                        if (parts.length < 3) return;
-                        const ym = parts[parts.length - 1];
-                        const y = ym.split('-')[0];
-                        if (y === String(year)) {
-                            const cost = count * mealPrice;
-                            yTotal += cost;
-                            const currentMonthKey = `${year}-${String(month).padStart(2, '0')}`;
-                            if (ym === currentMonthKey) mTotal += cost;
+
+                // 1. users meal data from logs / mealData
+                users.forEach(u => {
+                    for(let i=1; i<=12; i++) {
+                        const ym = `${year}-${String(i).padStart(2, '0')}`;
+                        const key = `u_${u.id}_${ym}`;
+                        let count = 0;
+                        if (mealData && mealData[key] !== undefined) {
+                            count = mealData[key];
+                        } else {
+                            // sum log.is_meal for this month manually to avoid circular dependencies
+                            let mSum = 0;
+                            const start = new Date(year, i - 1, 1);
+                            const end = new Date(year, i, 0);
+                            for (let d = 1; d <= end.getDate(); d++) {
+                                const ds = `${ym}-${String(d).padStart(2, '0')}`;
+                                const log = attendanceLogs.find(l => l.user_id === u.id && l.date === ds);
+                                const doc = docs.find(d => !d.isDeleted && d.authorId === u.id && d.status === 'approved' && d.startDate <= ds && d.endDate >= ds);
+
+                                let isWork = 0;
+                                if (doc && ['vacation', 'full', 'half', 'am', 'pm'].includes(doc.leaveType)) isWork = 1;
+                                else if (log && log.status !== 'vacation' && log.status !== 'absent') isWork = 1;
+
+                                if (isWork) {
+                                    if (!log || Number(log.is_meal ?? 1) !== 0) mSum++;
+                                }
+                            }
+                            count = mSum;
                         }
-                    });
-                }
+                        const cost = count * mealPrice;
+                        yTotal += cost;
+                        if (i === month) mTotal += cost;
+                    }
+                });
+
+                // 2. daily meal data
+                const dNamesSet = new Set();
+                dailyLogs.forEach(l => { if (l.date.startsWith(String(year))) dNamesSet.add(l.worker_name); });
+                Array.from(dNamesSet).forEach(name => {
+                    for(let i=1; i<=12; i++) {
+                        const ym = `${year}-${String(i).padStart(2, '0')}`;
+                        const key = `${ym}_d_${name}`;
+                        let count = 0;
+                        if (mealData && mealData[key] !== undefined) {
+                            count = mealData[key];
+                        } else {
+                            let mSum = 0;
+                            dailyLogs.forEach(log => {
+                                if (log.worker_name === name && log.date.startsWith(ym)) {
+                                    let h = log.hours ? parseFloat(log.hours) : 0;
+                                    if (!h && log.status !== 'absent') {
+                                        const bd = parseFloat(log.workDays) || 1;
+                                        h = (bd * 8) + (parseFloat(log.overtime) || 0) - (parseFloat(log.short_time) || 0);
+                                    }
+                                    let days = parseFloat(log.workDays) || 0;
+                                    if (days === 0 && h > 0) days = h / 8;
+                                    if (!isNaN(h) && (h > 0 || days > 0)) {
+                                        if (Number(log.is_meal ?? 1) !== 0) mSum += days;
+                                    }
+                                }
+                            });
+                            count = mSum;
+                        }
+                        const cost = count * mealPrice;
+                        yTotal += cost;
+                        if (i === month) mTotal += cost;
+                    }
+                });
+
                 return { monthTotal: mTotal, yearTotal: yTotal };
-            }, [mealData, year, month, useMeal, mealPrice]);
+            }, [users, dailyLogs, attendanceLogs, docs, mealData, year, month, useMeal, mealPrice]);
 
 
             // 2. 정규직 근태 통계 (핵심 로직 수정됨)
@@ -2439,7 +2499,7 @@
                 unused: statsData.reduce((a, c) => a + (c.leaveTotal - c.leaveUsed), 0),
                 totalGrant: statsData.reduce((a, c) => a + c.leaveTotal, 0),
                 totalUsed: statsData.reduce((a, c) => a + c.leaveUsed, 0),
-                totalMeal: statsData.reduce((a, c) => a + (c.m_meal || 0), 0)
+                totalMeal: statsData.reduce((a, c) => a + (c.m_meal || 0), 0) + (dailySummary.list.reduce((a, c) => a + (c.m_meal || 0), 0))
             };
 
             const burnRate = summary.totalGrant > 0 ? ((summary.totalUsed / summary.totalGrant) * 100).toFixed(1) : 0;
@@ -2691,14 +2751,82 @@
                 });
 
                 // 3. 식대 집계
-                if (useMeal && mealData) {
-                    Object.entries(mealData).forEach(([key, count]) => {
-                        const parts = key.split('_');
-                        const ym = parts[parts.length - 1];
+                if (useMeal) {
+                    let totalMealDays = 0;
+
+                    // 정직원 식수 계산
+                    attendanceLogs.forEach(log => {
+                        const ym = log.date.substring(0, 7);
                         if (ym >= startStr && ym <= endStr) {
-                            agg.totalMeal += (count * mealPrice);
+                            if (log.status !== 'absent' && log.status !== 'vacation' && log.status !== 'half') {
+                                if (Number(log.is_meal ?? 1) !== 0) totalMealDays++;
+                            }
                         }
                     });
+
+                    // 일용직 식수 계산
+                    dailyLogs.forEach(log => {
+                        const ym = log.date.substring(0, 7);
+                        if (ym >= startStr && ym <= endStr) {
+                            if (log.status !== 'absent') {
+                                let h = log.hours ? parseFloat(log.hours) : 0;
+                                if (!h) {
+                                    const bd = parseFloat(log.workDays) || 1;
+                                    h = (bd * 8) + (parseFloat(log.overtime) || 0) - (parseFloat(log.short_time) || 0);
+                                }
+                                let days = parseFloat(log.workDays) || 0;
+                                if (days === 0 && h > 0) days = h / 8;
+                                if (!isNaN(h) && (h > 0 || days > 0)) {
+                                    if (Number(log.is_meal ?? 1) !== 0) totalMealDays += days;
+                                }
+                            }
+                        }
+                    });
+
+                    // mealData 오버라이드
+                    if (mealData) {
+                        Object.entries(mealData).forEach(([key, count]) => {
+                            const parts = key.split('_');
+                            if (parts.length >= 3) {
+                                const type = parts[0];
+                                const id = parts[1];
+                                const ym = parts[2];
+                                if (ym >= startStr && ym <= endStr) {
+                                    // mealData에 명시된 값이 있으면, 원래 계산된 값을 빼고 이 값을 더함
+                                    let defaultCount = 0;
+                                    if (type === 'u') {
+                                        attendanceLogs.forEach(log => {
+                                            if (log.user_id === id && log.date.startsWith(ym)) {
+                                                if (log.status !== 'absent' && log.status !== 'vacation' && log.status !== 'half') {
+                                                    if (Number(log.is_meal ?? 1) !== 0) defaultCount++;
+                                                }
+                                            }
+                                        });
+                                    } else {
+                                        dailyLogs.forEach(log => {
+                                            if (log.worker_name === id && log.date.startsWith(ym)) {
+                                                if (log.status !== 'absent') {
+                                                    let h = log.hours ? parseFloat(log.hours) : 0;
+                                                    if (!h) {
+                                                        const bd = parseFloat(log.workDays) || 1;
+                                                        h = (bd * 8) + (parseFloat(log.overtime) || 0) - (parseFloat(log.short_time) || 0);
+                                                    }
+                                                    let days = parseFloat(log.workDays) || 0;
+                                                    if (days === 0 && h > 0) days = h / 8;
+                                                    if (!isNaN(h) && (h > 0 || days > 0)) {
+                                                        if (Number(log.is_meal ?? 1) !== 0) defaultCount += days;
+                                                    }
+                                                }
+                                            }
+                                        });
+                                    }
+                                    totalMealDays = totalMealDays - defaultCount + count;
+                                }
+                            }
+                        });
+                    }
+
+                    agg.totalMeal = totalMealDays * mealPrice;
                 }
 
                 // [최종 계산]
