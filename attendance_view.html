@@ -2695,6 +2695,23 @@
             const [loading, setLoading] = React.useState(false);
             const [result, setResult] = React.useState(null);
 
+            // [수정] 시즌 비교 시 두 기간 중 하나라도 식대 사용 설정이 켜져 있는지 확인
+            const useMeal = React.useMemo(() => {
+                const checkRange = (startStr, endStr) => {
+                    let curr = new Date(startStr + "-01");
+                    const end = new Date(endStr + "-01");
+                    while (curr <= end) {
+                        const ym = `${curr.getFullYear()}-${String(curr.getMonth() + 1).padStart(2, '0')}`;
+                        if (mealConfigMap && mealConfigMap[`cfg_${ym}`] && mealConfigMap[`cfg_${ym}`].use) {
+                            return true;
+                        }
+                        curr.setMonth(curr.getMonth() + 1);
+                    }
+                    return false;
+                };
+                return checkRange(rangeA.start, rangeA.end) || checkRange(rangeB.start, rangeB.end);
+            }, [rangeA, rangeB, mealConfigMap]);
+
             // [핵심] 상세 데이터 집계 함수
             const aggregateRange = (startStr, endStr) => {
                 // 초기값
