@@ -2685,7 +2685,7 @@
         }
 
         // [신규 컴포넌트] 구간 비교 분석 시스템 (Seasonal Insight) - [최종] 상세 테이블 분석 모드
-        function SeasonalAnalysis({ users, attendanceLogs, dailyLogs, mealData, mealConfigMap }) {
+        function SeasonalAnalysis({ users, attendanceLogs, dailyLogs, mealData, mealConfigMap, useMeal }) {
             const today = new Date();
             const thisYear = today.getFullYear();
             const lastYear = thisYear - 1;
@@ -5143,6 +5143,7 @@
                                         dailyLogs={dailyLogs}
                                         mealData={mealData}
                                         mealConfigMap={mealConfigMap}
+                                        useMeal={useMeal}
                                     />
                                 )}
                             </div>
